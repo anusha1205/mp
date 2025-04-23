@@ -34,6 +34,80 @@ public class Main {
 
 NOT DONE:
 Write a program to find FIRST & FOLLOW Symbols for the given grammar.
+def compute_first(grammar):
+    fs = {nt: set() for nt in grammar} 
+    def get_first(symbol):
+        if symbol not in grammar:  
+            return {symbol} 
+        else:
+            return fs[symbol] 
+    change = True
+    while change:
+        change = False
+        for nt, rules in grammar.items():
+            for rule in rules:
+                symbols = rule.split()
+                first_of_rule = set()
+                if rule == 'ε': 
+                    first_of_rule.add('ε')
+                else:
+                    for symbol in symbols:
+                        first_of_symbol = get_first(symbol)
+                        first_of_rule.update(first_of_symbol - {'ε'})
+                        if 'ε' not in first_of_symbol:
+                            break
+                    else:
+                        first_of_rule.add('ε')  
+
+                if not fs[nt].issuperset(first_of_rule):
+                    fs[nt].update(first_of_rule)
+                    change = True
+    return fs
+def compute_follow(grammar, first_sets):
+    follow_sets = {nt: set() for nt in grammar}
+    start_symbol = next(iter(grammar))  
+    follow_sets[start_symbol].add('$')  
+    change = True
+    while change:
+        change = False
+        for nt, rules in grammar.items():
+            for rule in rules:
+                symbols = rule.split()
+                for i, symbol in enumerate(symbols):
+                    if symbol in grammar: 
+                        follow = set()
+                        for j in range(i + 1, len(symbols)):
+                            next_symbol = symbols[j]
+                            first_of_next = first_sets[next_symbol] if next_symbol in first_sets else {next_symbol}
+                            follow.update(first_of_next - {'ε'})
+                            if 'ε' not in first_of_next:
+                                break
+                        else:
+                            follow.update(follow_sets[nt])
+                        if not follow_sets[symbol].issuperset(follow):
+                            follow_sets[symbol].update(follow)
+                            change = True
+    return follow_sets
+grammar = { 
+    'S': ['a B D h'], 
+    'B': ['c C'],
+    'C': ['b c', 'ε'],
+    'D': ['E F' ],
+    'E': ['g', 'ε'],
+    'F': ['f', 'ε']
+}
+first_sets = compute_first(grammar)
+follow_sets = compute_follow(grammar, first_sets)
+print("Grammar:")
+for non_terminal, rules in grammar.items():
+    print(f"{non_terminal} -> {', '.join(rules)}")
+print("\nFirst Sets:")
+for nt in first_sets:
+    print(f"{nt}: {first_sets[nt]}")
+print("\nFollow Sets:")
+for nt in follow_sets:
+    print(f"{nt}: {follow_sets[nt]}")
+
 
 
 
